@@ -171,7 +171,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       ),
     );
   }
-}
+  }   }
 
 class UserManagementPage extends StatefulWidget {
   const UserManagementPage({super.key});
