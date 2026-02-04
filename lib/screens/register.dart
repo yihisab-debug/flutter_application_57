@@ -1,6 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import '../services/auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -10,6 +9,7 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final AuthService _authService = AuthService();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -51,28 +51,20 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     try {
-      final response = await http.post(
-        Uri.parse('https://api.escuelajs.co/api/v1/users/'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'name': nameController.text,
-          'email': emailController.text,
-          'password': passwordController.text,
-          'avatar': avatarController.text.isNotEmpty
-              ? avatarController.text
-              : 'https://placehold.co/400x400',
-        }),
+      final success = await _authService.register(
+        nameController.text,
+        emailController.text,
+        passwordController.text,
+        avatarController.text,
       );
 
-      if (response.statusCode == 201) {
-        if (mounted) {
+      if (mounted) {
+        if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Registration successful! Please login.')),
           );
           Navigator.pop(context);
-        }
-      } else {
-        if (mounted) {
+        } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Registration failed. Email may already exist.')),
           );
@@ -149,11 +141,10 @@ class _RegisterPageState extends State<RegisterPage> {
               TextField(
                 controller: nameController,
                 style: const TextStyle(color: Colors.white),
+
                 decoration: InputDecoration(
                   labelText: 'Name *',
-
                   labelStyle: const TextStyle(color: Colors.white70),
-
                   prefixIcon: const Icon(Icons.person, color: Colors.white70),
 
                   border: OutlineInputBorder(
@@ -181,9 +172,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   labelText: 'Email *',
-
                   labelStyle: const TextStyle(color: Colors.white70),
-
                   prefixIcon: const Icon(Icons.email, color: Colors.white70),
 
                   border: OutlineInputBorder(
@@ -211,24 +200,20 @@ class _RegisterPageState extends State<RegisterPage> {
                 obscureText: obscurePassword,
                 decoration: InputDecoration(
                   labelText: 'Password *',
-
                   labelStyle: const TextStyle(color: Colors.white70),
-
                   prefixIcon: const Icon(Icons.lock, color: Colors.white70),
 
                   suffixIcon: IconButton(
-
                     icon: Icon(
                       obscurePassword ? Icons.visibility : Icons.visibility_off,
                       color: Colors.white70,
                     ),
-
+                    
                     onPressed: () {
                       setState(() {
                         obscurePassword = !obscurePassword;
                       });
                     },
-
                   ),
 
                   border: OutlineInputBorder(
@@ -256,13 +241,10 @@ class _RegisterPageState extends State<RegisterPage> {
                 obscureText: obscureConfirmPassword,
                 decoration: InputDecoration(
                   labelText: 'Confirm Password *',
-
                   labelStyle: const TextStyle(color: Colors.white70),
-
                   prefixIcon: const Icon(Icons.lock_outline, color: Colors.white70),
 
                   suffixIcon: IconButton(
-                  
                     icon: Icon(
                       obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
                       color: Colors.white70,
@@ -299,14 +281,11 @@ class _RegisterPageState extends State<RegisterPage> {
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: 'Avatar URL (optional)',
-
                   labelStyle: const TextStyle(color: Colors.white70),
-
                   prefixIcon: const Icon(Icons.image, color: Colors.white70),
-
                   hintText: 'https://placehold.co/400x400',
                   hintStyle: const TextStyle(color: Colors.white30),
-
+                  
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -315,12 +294,11 @@ class _RegisterPageState extends State<RegisterPage> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: Colors.grey),
                   ),
-
+                  
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: Colors.white),
                   ),
-
                 ),
               ),
 
@@ -339,7 +317,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
 
                   child: isLoading
-
                       ? const SizedBox(
                           height: 24,
                           width: 24,
@@ -348,13 +325,11 @@ class _RegisterPageState extends State<RegisterPage> {
                             strokeWidth: 2,
                           ),
                         )
-
                       : const Text(
                           'Register',
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                 ),
-
               ),
 
               const SizedBox(height: 16),
@@ -362,17 +337,14 @@ class _RegisterPageState extends State<RegisterPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-
                   const Text(
                     'Already have an account? ',
                     style: TextStyle(color: Colors.white70),
                   ),
-
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context);
                     },
-
                     child: const Text(
                       'Login',
                       style: TextStyle(
@@ -380,9 +352,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
                   ),
-
                 ],
               ),
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'main.dart';
+import '../services/auth_service.dart';
 import 'login.dart';
+import 'product_list_screen.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -10,9 +11,11 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  final AuthService _authService = AuthService();
+
   @override
   Widget build(BuildContext context) {
-    final user = AuthStorage.currentUser;
+    final user = AuthService.currentUser;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -26,7 +29,6 @@ class _ProfilePageState extends State<ProfilePage> {
           fontWeight: FontWeight.bold,
         ),
         actions: [
-
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () {
@@ -44,7 +46,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     'Are you sure you want to logout?',
                     style: TextStyle(color: Colors.white70),
                   ),
-                  
+
                   actions: [
 
                     TextButton(
@@ -56,24 +58,24 @@ class _ProfilePageState extends State<ProfilePage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                       ),
+
                       onPressed: () {
-                        AuthStorage.currentUser = null;
-                        AuthStorage.authToken = null;
+                        _authService.logout();
                         Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(builder: (_) => const LoginPage()),
                           (route) => false,
                         );
                       },
-                      child: const Text('Logout', style: TextStyle(color: Colors.white)),
-                    ),
 
+                      child: const Text('Logout', style: TextStyle(color: Colors.white)),
+
+                    ),
                   ],
                 ),
               );
             },
           ),
-
         ],
       ),
 
@@ -110,6 +112,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   const SizedBox(height: 24),
 
                   ElevatedButton(
+
                     onPressed: () {
                       Navigator.pushReplacement(
                         context,
@@ -128,7 +131,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
 
                   ),
-
                 ],
               ),
             )
@@ -137,7 +139,6 @@ class _ProfilePageState extends State<ProfilePage> {
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-
                   CircleAvatar(
                     radius: 80,
                     backgroundImage: NetworkImage(
@@ -194,7 +195,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                           ListTile(
                             leading: const Icon(Icons.badge, color: Colors.white70),
-                            
+
                             title: const Text(
                               'User ID',
                               style: TextStyle(color: Colors.white70, fontSize: 14),
@@ -204,7 +205,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               user.id.toString(),
                               style: const TextStyle(color: Colors.white, fontSize: 16),
                             ),
-
+                            
                           ),
 
                           ListTile(
@@ -214,7 +215,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               'Role',
                               style: TextStyle(color: Colors.white70, fontSize: 14),
                             ),
-                            
+
                             subtitle: Text(
                               user.role,
                               style: const TextStyle(color: Colors.white, fontSize: 16),
@@ -250,7 +251,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       onPressed: () {
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (_) => const MainNavigationPage()),
+                          MaterialPageRoute(builder: (_) => const ProductListPage()),
                         );
                       },
 
@@ -298,9 +299,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                     ),
-
+                    
                   ),
-
                 ],
               ),
             ),

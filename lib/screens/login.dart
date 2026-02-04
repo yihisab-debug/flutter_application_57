@@ -1,14 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'main.dart';
+import '../services/auth_service.dart';
 import 'register.dart';
 import 'profile.dart';
-
-class AuthStorage {
-  static User? currentUser;
-  static String? authToken;
-}
+import 'product_list_screen.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,6 +12,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final AuthService _authService = AuthService();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
@@ -43,38 +38,18 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final response = await http.post(
-        Uri.parse('https://api.escuelajs.co/api/v1/auth/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'email': emailController.text,
-          'password': passwordController.text,
-        }),
+      final success = await _authService.login(
+        emailController.text,
+        passwordController.text,
       );
 
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        final data = json.decode(response.body);
-        AuthStorage.authToken = data['access_token'];
-        
-        final profileResponse = await http.get(
-          Uri.parse('https://api.escuelajs.co/api/v1/auth/profile'),
-          headers: {
-            'Authorization': 'Bearer ${AuthStorage.authToken}',
-          },
-        );
-
-        if (profileResponse.statusCode == 200) {
-          AuthStorage.currentUser = User.fromJson(json.decode(profileResponse.body));
-          
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const ProfilePage()),
-            );
-          }
-        }
-      } else {
-        if (mounted) {
+      if (mounted) {
+        if (success) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const ProfilePage()),
+          );
+        } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Invalid email or password')),
           );
@@ -143,22 +118,28 @@ class _LoginPageState extends State<LoginPage> {
                   controller: emailController,
                   style: const TextStyle(color: Colors.white),
                   keyboardType: TextInputType.emailAddress,
+
                   decoration: InputDecoration(
                     labelText: 'Email',
                     labelStyle: const TextStyle(color: Colors.white70),
                     prefixIcon: const Icon(Icons.email, color: Colors.white70),
+
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(color: Colors.grey),
                     ),
+
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(color: Colors.white),
                     ),
+
                   ),
+
                 ),
 
                 const SizedBox(height: 16),
@@ -167,32 +148,40 @@ class _LoginPageState extends State<LoginPage> {
                   controller: passwordController,
                   style: const TextStyle(color: Colors.white),
                   obscureText: obscurePassword,
+
                   decoration: InputDecoration(
                     labelText: 'Password',
                     labelStyle: const TextStyle(color: Colors.white70),
                     prefixIcon: const Icon(Icons.lock, color: Colors.white70),
                     suffixIcon: IconButton(
+
                       icon: Icon(
                         obscurePassword ? Icons.visibility : Icons.visibility_off,
                         color: Colors.white70,
                       ),
+
                       onPressed: () {
                         setState(() {
                           obscurePassword = !obscurePassword;
                         });
                       },
+
                     ),
+
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(color: Colors.grey),
                     ),
+
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(color: Colors.white),
                     ),
+
                   ),
                 ),
 
@@ -265,7 +254,7 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (_) => const MainNavigationPage()),
+                      MaterialPageRoute(builder: (_) => const ProductListPage()),
                     );
                   },
                   child: const Text(
