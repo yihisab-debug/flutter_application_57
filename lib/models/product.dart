@@ -22,8 +22,8 @@ class Product {
       price: (json['price'] as num).toDouble(),
       description: json['description'],
       images: json['images'],
-      category: json['category'] != null 
-          ? Category.fromJson(json['category']) 
+      category: json['category'] != null
+          ? Category.fromJson(json['category'])
           : null,
     );
   }
@@ -36,10 +36,10 @@ class Category {
   final String? image;
 
   Category({
-    required this.id, 
-    required this.name, 
-    this.slug, 
-    this.image
+    required this.id,
+    required this.name,
+    this.slug,
+    this.image,
   });
 
   factory Category.fromJson(Map<String, dynamic> json) {
@@ -62,35 +62,32 @@ class Category {
 class User {
   final int id;
   final String email;
-  final String password;
+  final String? password;
   final String name;
-  final String role;
   final String? avatar;
 
   User({
     required this.id,
     required this.email,
-    required this.password,
+    this.password,
     required this.name,
-    required this.role,
     this.avatar,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'],
-      email: json['email'],
+      id: json['id'] ?? 0,
+      email: json['email'] ?? '',
       password: json['password'],
-      name: json['name'],
-      role: json['role'],
+      name: json['name'] ?? '',
       avatar: json['avatar'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'email': email,
-      'password': password,
       'name': name,
       'avatar': avatar ?? 'https://placehold.co/400x400',
     };

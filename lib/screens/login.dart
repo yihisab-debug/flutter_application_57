@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'register.dart';
-import 'profile.dart';
 import 'product_list_screen.dart';
 
 class LoginPage extends StatefulWidget {
@@ -28,18 +27,16 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> login() async {
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all fields')),
+        const SnackBar(content: Text('Fill in all fields')),
       );
       return;
     }
 
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
     try {
       final success = await _authService.login(
-        emailController.text,
+        emailController.text.trim(),
         passwordController.text,
       );
 
@@ -47,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
         if (success) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => const ProfilePage()),
+            MaterialPageRoute(builder: (_) => const ProductListPage()),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -63,9 +60,7 @@ class _LoginPageState extends State<LoginPage> {
       }
     } finally {
       if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
+        setState(() => isLoading = false);
       }
     }
   }
@@ -78,38 +73,27 @@ class _LoginPageState extends State<LoginPage> {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
+
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
 
-                const Icon(
-                  Icons.shopping_bag,
-                  size: 80,
-                  color: Colors.grey,
-                ),
-
+                const Icon(Icons.shopping_bag, size: 80, color: Colors.grey),
                 const SizedBox(height: 16),
 
                 const Text(
-                  'Platzi Store',
+                  'Store',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
                 ),
 
                 const SizedBox(height: 8),
 
                 const Text(
-                  'Login to your account',
+                  'Log in to your account',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(color: Colors.white70, fontSize: 16),
                 ),
 
                 const SizedBox(height: 48),
@@ -124,9 +108,7 @@ class _LoginPageState extends State<LoginPage> {
                     labelStyle: const TextStyle(color: Colors.white70),
                     prefixIcon: const Icon(Icons.email, color: Colors.white70),
 
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
 
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -139,7 +121,6 @@ class _LoginPageState extends State<LoginPage> {
                     ),
 
                   ),
-
                 ),
 
                 const SizedBox(height: 16),
@@ -160,17 +141,10 @@ class _LoginPageState extends State<LoginPage> {
                         color: Colors.white70,
                       ),
 
-                      onPressed: () {
-                        setState(() {
-                          obscurePassword = !obscurePassword;
-                        });
-                      },
-
+                      onPressed: () => setState(() => obscurePassword = !obscurePassword),
                     ),
 
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
 
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -184,7 +158,7 @@ class _LoginPageState extends State<LoginPage> {
 
                   ),
                 ),
-
+                
                 const SizedBox(height: 24),
 
                 SizedBox(
@@ -194,27 +168,17 @@ class _LoginPageState extends State<LoginPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.grey,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-
                     child: isLoading
-
                         ? const SizedBox(
                             height: 24,
                             width: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                           )
 
-                        : const Text(
-                            'Login',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          
+                        : const Text('Log In', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+
                   ),
                 ),
 
@@ -223,11 +187,7 @@ class _LoginPageState extends State<LoginPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-
-                    const Text(
-                      "Don't have an account? ",
-                      style: TextStyle(color: Colors.white70),
-                    ),
+                    const Text('No account? ', style: TextStyle(color: Colors.white70)),
 
                     TextButton(
                       onPressed: () {
@@ -236,15 +196,13 @@ class _LoginPageState extends State<LoginPage> {
                           MaterialPageRoute(builder: (_) => const RegisterPage()),
                         );
                       },
-                      child: const Text(
-                        'Register',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
 
+                      child: const Text(
+                        'Registration',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+
+                    ),
                   ],
                 ),
 
@@ -257,10 +215,9 @@ class _LoginPageState extends State<LoginPage> {
                       MaterialPageRoute(builder: (_) => const ProductListPage()),
                     );
                   },
-                  child: const Text(
-                    'Continue as Guest',
-                    style: TextStyle(color: Colors.white70),
-                  ),
+
+                  child: const Text('Continue as a guest', style: TextStyle(color: Colors.white70)),
+
                 ),
 
               ],

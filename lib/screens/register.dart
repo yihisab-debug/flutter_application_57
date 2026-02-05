@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import 'product_list_screen.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -19,6 +20,9 @@ class _RegisterPageState extends State<RegisterPage> {
   bool obscurePassword = true;
   bool obscureConfirmPassword = true;
 
+  bool? emailAvailable;
+  bool checkingEmail = false;
+
   @override
   void dispose() {
     nameController.dispose();
@@ -29,12 +33,31 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
+  Future<void> checkEmail() async {
+    final email = emailController.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      setState(() => emailAvailable = null);
+      return;
+    }
+
+    setState(() => checkingEmail = true);
+
+    final available = await _authService.isEmailAvailable(email);
+
+    if (mounted) {
+      setState(() {
+        emailAvailable = available;
+        checkingEmail = false;
+      });
+    }
+  }
+
   Future<void> register() async {
     if (nameController.text.isEmpty ||
         emailController.text.isEmpty ||
         passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all required fields')),
+        const SnackBar(content: Text('Fill in all required fields')),
       );
       return;
     }
@@ -46,27 +69,39 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    setState(() {
-      isLoading = true;
-    });
+    if (emailAvailable == false) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This email is already taken')),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
 
     try {
       final success = await _authService.register(
-        nameController.text,
-        emailController.text,
+        nameController.text.trim(),
+        emailController.text.trim(),
         passwordController.text,
-        avatarController.text,
+        avatarController.text.trim(),
       );
 
       if (mounted) {
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Registration successful! Please login.')),
+            const SnackBar(
+              content: Text('Registration successful!'),
+              backgroundColor: Colors.green,
+            ),
           );
-          Navigator.pop(context);
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const ProductListPage()),
+            (route) => false,
+          );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Registration failed. Email may already exist.')),
+            const SnackBar(content: Text('Registration error. Please try another email.')),
           );
         }
       }
@@ -78,9 +113,7 @@ class _RegisterPageState extends State<RegisterPage> {
       }
     } finally {
       if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
+        setState(() => isLoading = false);
       }
     }
   }
@@ -99,7 +132,7 @@ class _RegisterPageState extends State<RegisterPage> {
           fontWeight: FontWeight.bold,
         ),
       ),
-      
+
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -107,16 +140,12 @@ class _RegisterPageState extends State<RegisterPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
 
-              const Icon(
-                Icons.person_add,
-                size: 80,
-                color: Colors.grey,
-              ),
+              const Icon(Icons.person_add, size: 80, color: Colors.grey),
 
               const SizedBox(height: 16),
 
               const Text(
-                'Register',
+                'Registration',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,
@@ -130,10 +159,7 @@ class _RegisterPageState extends State<RegisterPage> {
               const Text(
                 'Create a new account',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 16,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 16),
               ),
 
               const SizedBox(height: 32),
@@ -147,9 +173,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   labelStyle: const TextStyle(color: Colors.white70),
                   prefixIcon: const Icon(Icons.person, color: Colors.white70),
 
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
 
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -170,34 +194,86 @@ class _RegisterPageState extends State<RegisterPage> {
                 controller: emailController,
                 style: const TextStyle(color: Colors.white),
                 keyboardType: TextInputType.emailAddress,
+                onChanged: (_) {
+
+                  if (emailAvailable != null) {
+                    setState(() => emailAvailable = null);
+                  }
+                },
+
+                onEditingComplete: checkEmail,
+
                 decoration: InputDecoration(
                   labelText: 'Email *',
                   labelStyle: const TextStyle(color: Colors.white70),
                   prefixIcon: const Icon(Icons.email, color: Colors.white70),
+                  suffixIcon: checkingEmail
 
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white70),
+                          ),
+                        )
+
+                      : emailAvailable == true
+                          ? const Icon(Icons.check_circle, color: Colors.green)
+
+                          : emailAvailable == false
+                              ? const Icon(Icons.cancel, color: Colors.red)
+
+                              : null,
+                  helperText: emailAvailable == false
+                      ? 'This email is already taken'
+                      : emailAvailable == true
+                          ? 'Email is available'
+                          : null,
+
+                  helperStyle: TextStyle(
+                    color: emailAvailable == false ? Colors.red : Colors.green,
                   ),
+
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
 
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.grey),
+                    borderSide: BorderSide(
+                      color: emailAvailable == false ? Colors.red : Colors.grey,
+                    ),
                   ),
 
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.white),
+                    borderSide: BorderSide(
+                      color: emailAvailable == false ? Colors.red : Colors.white,
+                    ),
                   ),
 
                 ),
               ),
 
-              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: checkingEmail ? null : checkEmail,
+
+                  child: const Text(
+                    'Check email',
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+
+                ),
+              ),
+
+              const SizedBox(height: 8),
 
               TextField(
                 controller: passwordController,
                 style: const TextStyle(color: Colors.white),
                 obscureText: obscurePassword,
+
                 decoration: InputDecoration(
                   labelText: 'Password *',
                   labelStyle: const TextStyle(color: Colors.white70),
@@ -208,17 +284,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       obscurePassword ? Icons.visibility : Icons.visibility_off,
                       color: Colors.white70,
                     ),
-                    
-                    onPressed: () {
-                      setState(() {
-                        obscurePassword = !obscurePassword;
-                      });
-                    },
+                    onPressed: () => setState(() => obscurePassword = !obscurePassword),
                   ),
 
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
 
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -239,6 +308,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 controller: confirmPasswordController,
                 style: const TextStyle(color: Colors.white),
                 obscureText: obscureConfirmPassword,
+
                 decoration: InputDecoration(
                   labelText: 'Confirm Password *',
                   labelStyle: const TextStyle(color: Colors.white70),
@@ -249,17 +319,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
                       color: Colors.white70,
                     ),
-
-                    onPressed: () {
-                      setState(() {
-                        obscureConfirmPassword = !obscureConfirmPassword;
-                      });
-                    },
+                    onPressed: () => setState(() => obscureConfirmPassword = !obscureConfirmPassword),
                   ),
 
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
 
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -279,26 +342,26 @@ class _RegisterPageState extends State<RegisterPage> {
               TextField(
                 controller: avatarController,
                 style: const TextStyle(color: Colors.white),
+
                 decoration: InputDecoration(
                   labelText: 'Avatar URL (optional)',
                   labelStyle: const TextStyle(color: Colors.white70),
                   prefixIcon: const Icon(Icons.image, color: Colors.white70),
-                  hintText: 'https://placehold.co/400x400',
+                  hintText: 'https://picsum.photos/800',
                   hintStyle: const TextStyle(color: Colors.white30),
-                  
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
 
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: Colors.grey),
                   ),
-                  
+
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: Colors.white),
                   ),
+
                 ),
               ),
 
@@ -315,20 +378,18 @@ class _RegisterPageState extends State<RegisterPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-
                   child: isLoading
                       ? const SizedBox(
                           height: 24,
                           width: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
+                        
                       : const Text(
                           'Register',
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
+
                 ),
               ),
 
@@ -337,22 +398,17 @@ class _RegisterPageState extends State<RegisterPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Already have an account? ',
-                    style: TextStyle(color: Colors.white70),
-                  ),
+
+                  const Text('Already have an account? ', style: TextStyle(color: Colors.white70)),
+
                   TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
+                    onPressed: () => Navigator.pop(context),
                     child: const Text(
                       'Login',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
+
                 ],
               ),
 
