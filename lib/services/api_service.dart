@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/product.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://api.escuelajs.co/api/v1';
+  static const String baseUrl = 'https://fakestoreapi.com';
 
   Future<List<Product>> fetchProducts({
     String? title,
@@ -11,26 +11,44 @@ class ApiService {
     double? priceMax,
     int? categoryId,
   }) async {
-    String url = '$baseUrl/products?offset=0&limit=20';
-    
-    if (title != null && title.isNotEmpty) {
-      url += '&title=$title';
-    }
-    if (priceMin != null) {
-      url += '&price_min=$priceMin';
-    }
-    if (priceMax != null) {
-      url += '&price_max=$priceMax';
-    }
+    String url = '$baseUrl/products';
+
     if (categoryId != null) {
-      url += '&categoryId=$categoryId';
+      url = '$baseUrl/products/category/$categoryId';
     }
 
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
       final List data = json.decode(response.body);
-      return data.map((e) => Product.fromJson(e)).toList();
+
+      List<Product> products = data.map((e) {
+        return Product(
+          id: e['id'],
+          title: e['title'],
+          price: (e['price'] as num).toDouble(),
+          description: e['description'],
+          images: [e['image']],
+          category: null,
+        );
+      }).toList();
+
+      if (title != null && title.isNotEmpty) {
+        products = products
+            .where((p) =>
+                p.title.toLowerCase().contains(title.toLowerCase()))
+            .toList();
+      }
+
+      if (priceMin != null) {
+        products = products.where((p) => p.price >= priceMin).toList();
+      }
+
+      if (priceMax != null) {
+        products = products.where((p) => p.price <= priceMax).toList();
+      }
+
+      return products;
     } else {
       throw Exception('Error loading products');
     }
@@ -42,7 +60,16 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      return Product.fromJson(json.decode(response.body));
+      final e = json.decode(response.body);
+
+      return Product(
+        id: e['id'],
+        title: e['title'],
+        price: (e['price'] as num).toDouble(),
+        description: e['description'],
+        images: [e['image']],
+        category: null,
+      );
     } else {
       throw Exception('Error loading product');
     }
@@ -50,147 +77,87 @@ class ApiService {
 
   Future<List<Category>> fetchCategories() async {
     final response = await http.get(
-      Uri.parse('$baseUrl/categories'),
+      Uri.parse('$baseUrl/products/categories'),
     );
 
     if (response.statusCode == 200) {
       final List data = json.decode(response.body);
-      return data.map((e) => Category.fromJson(e)).toList();
+
+      return data
+          .asMap()
+          .entries
+          .map((e) => Category(
+                id: e.key,
+                name: e.value,
+                image: '',
+              ))
+          .toList();
     } else {
       throw Exception('Error loading categories');
     }
   }
 
   Future<Category> fetchCategory(int id) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/categories/$id'),
-    );
-
-    if (response.statusCode == 200) {
-      return Category.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Error loading category');
-    }
+    final categories = await fetchCategories();
+    return categories.firstWhere((c) => c.id == id);
   }
 
   Future<void> createCategory(String name, String image) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/categories/'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'name': name,
-        'image': image,
-      }),
-    );
-
-    if (response.statusCode != 201) {
-      throw Exception('Error creating category');
-    }
+    throw Exception('FakeStore API does not support category creation');
   }
 
   Future<void> updateCategory(int id, String name, String image) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/categories/$id'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'name': name,
-        'image': image,
-      }),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('Error updating category');
-    }
+    throw Exception('FakeStore API does not support category update');
   }
 
   Future<void> deleteCategory(int id) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/categories/$id'),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('Error deleting category');
-    }
+    throw Exception('FakeStore API does not support category delete');
   }
 
   Future<List<Product>> fetchProductsByCategory(int categoryId) async {
+    final categories = await fetchCategories();
+    final categoryName =
+        categories.firstWhere((c) => c.id == categoryId).name;
+
     final response = await http.get(
-      Uri.parse('$baseUrl/categories/$categoryId/products'),
+      Uri.parse('$baseUrl/products/category/$categoryName'),
     );
 
     if (response.statusCode == 200) {
       final List data = json.decode(response.body);
-      return data.map((e) => Product.fromJson(e)).toList();
+      return data.map((e) {
+        return Product(
+          id: e['id'],
+          title: e['title'],
+          price: (e['price'] as num).toDouble(),
+          description: e['description'],
+          images: [e['image']],
+          category: null,
+        );
+      }).toList();
     } else {
       throw Exception('Error loading products');
     }
   }
 
   Future<List<User>> fetchUsers() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/users'),
-    );
-
-    if (response.statusCode == 200) {
-      final List data = json.decode(response.body);
-      return data.map((e) => User.fromJson(e)).toList();
-    } else {
-      throw Exception('Error loading users');
-    }
+    throw Exception('FakeStore API does not support users');
   }
 
   Future<User> fetchUser(int id) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/users/$id'),
-    );
-
-    if (response.statusCode == 200) {
-      return User.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Error loading user');
-    }
+    throw Exception('FakeStore API does not support users');
   }
 
-  Future<void> createUser(String name, String email, String password, String avatar) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/users/'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'name': name,
-        'email': email,
-        'password': password,
-        'avatar': avatar,
-      }),
-    );
-
-    if (response.statusCode != 201) {
-      throw Exception('Error creating user');
-    }
+  Future<void> createUser(
+      String name, String email, String password, String avatar) async {
+    throw Exception('FakeStore API does not support users');
   }
 
   Future<void> updateUser(int id, String name, String email, String avatar) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/users/$id'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'name': name,
-        'email': email,
-        'avatar': avatar,
-      }),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('Error updating user');
-    }
+    throw Exception('FakeStore API does not support users');
   }
 
   Future<void> deleteUser(int id) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/users/$id'),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('Error deleting user');
-    }
+    throw Exception('FakeStore API does not support users');
   }
 }
